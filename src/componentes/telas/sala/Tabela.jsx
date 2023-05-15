@@ -11,6 +11,8 @@ function Tabela() {
     remover,
     setEditar,
     recuperar,
+    recuperaEquipamentos,
+    setExibirEquipamentos,
   } = useContext(SalaContext);
 
   (function () {
@@ -102,8 +104,19 @@ function Tabela() {
                   >
                     <i className="bi bi-pencil-square"></i>
                   </button>
+                  <button
+                    className="btn btn-success"
+                    title="Equipamentos"
+                    onClick={() => {
+                      recuperaEquipamentos(objeto.codigo);
+                      setAlerta({ status: "", message: "" });
+                      setExibirEquipamentos(true);
+                    }}
+                  >
+                    <i className="bi bi-pc-display"></i>
+                  </button>
                 </td>
-                <td>{objeto.codigo}</td>
+                <td scope="row">{objeto.codigo}</td>
                 <td>{objeto.numero}</td>
                 <td>{objeto.descricao}</td>
                 <td>{objeto.capacidade}</td>

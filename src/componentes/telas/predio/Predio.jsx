@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
-import Form from "./Form";
 import PredioContext from "./PredioContext";
 import Tabela from "./Tabela";
+import Form from "./Form";
 import Carregando from "../../comuns/Carregando";
+import {
+  getPrediosAPI,
+  getPredioPorCodigoAPI,
+  deletePredioPorCodigoAPI,
+  cadastraPrediosAPI,
+} from "../../serviços/PredioServiço";
 
 function Predio() {
   const [alerta, setAlerta] = useState({ status: "", message: "" });
@@ -14,62 +20,24 @@ function Predio() {
     descricao: "",
     sigla: "",
   });
-  const [carregando, setCarregando] = useState(true);
-
-  const recuperaPredios = async () => {
-    setCarregando(true);
-    await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios`)
-      .then((response) => response.json())
-      .then((data) => setListaObjetos(data))
-      .catch((err) => setAlerta({ status: "error", message: err }));
-    setCarregando(false);
-  };
-
-  const remover = async (objeto) => {
-    if (window.confirm("Deseja remover este objeto?")) {
-      try {
-        await fetch(
-          `${process.env.REACT_APP_ENDERECO_API}/predios/${objeto.codigo}`,
-          { method: "DELETE" }
-        )
-          .then((response) => response.json())
-          .then((json) =>
-            setAlerta({ status: json.status, message: json.message })
-          );
-        recuperaPredios();
-      } catch (err) {
-        setAlerta({ status: "error", message: err });
-      }
-    }
-    recuperaPredios();
-  };
+  const [carregando, setCarrengando] = useState(true);
 
   const recuperar = async (codigo) => {
-    await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios/${codigo}`)
-      .then((response) => response.json())
-      .then((data) => setObjeto(data))
-      .catch((err) => console.log(err));
+    setObjeto(await getPredioPorCodigoAPI(codigo));
   };
 
   const acaoCadastrar = async (e) => {
     e.preventDefault();
     const metodo = editar ? "PUT" : "POST";
     try {
-      await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios`, {
-        method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(objeto),
-      })
-        .then((response) => response.json())
-        .then((json) => {
-          setAlerta({ status: json.status, message: json.message });
-          setObjeto(json.objeto);
-          if (!editar) {
-            setEditar(true);
-          }
-        });
+      let retornoAPI = await cadastraPrediosAPI(objeto, metodo);
+      setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+      setObjeto(retornoAPI.objeto);
+      if (!editar) {
+        setEditar(true);
+      }
     } catch (err) {
-      console.error(err.message);
+      console.log(err);
     }
     recuperaPredios();
   };
@@ -78,6 +46,20 @@ function Predio() {
     const name = e.target.name;
     const value = e.target.value;
     setObjeto({ ...objeto, [name]: value });
+  };
+
+  const recuperaPredios = async () => {
+    setCarrengando(true);
+    setListaObjetos(await getPrediosAPI());
+    setCarrengando(false);
+  };
+
+  const remover = async (objeto) => {
+    if (window.confirm("Deseja remover este objeto?")) {
+      let retornoAPI = await deletePredioPorCodigoAPI(objeto.codigo);
+      setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+    }
+    recuperaPredios();
   };
 
   useEffect(() => {

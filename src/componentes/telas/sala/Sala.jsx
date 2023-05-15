@@ -1,84 +1,106 @@
 import { useState, useEffect } from "react";
-import Form from "./Form";
 import SalaContext from "./SalaContext";
 import Tabela from "./Tabela";
+import Form from "./Form";
 import Carregando from "../../comuns/Carregando";
+import { getPrediosAPI } from "../../serviços/PredioServiço";
+import {
+  getSalasAPI,
+  getSalaPorCodigoAPI,
+  deleteSalaPorCodigoAPI,
+  cadastraSalasAPI,
+} from "../../serviços/SalaServiço";
 
-function Sala() {
+import {
+  cadastraEquipamentosAPI,
+  deleteEquipamentoPorCodigoAPI,
+  getEquipamentoPorCodigoAPI,
+  getEquipamentosDaSalaAPI,
+} from "../../serviços/EquipamentoServiço";
+
+import FormEquipamento from "./FormEquipamento";
+import TabelaEquipamentos from "./TabelaEquipamentos";
+
+function Predio() {
   const [alerta, setAlerta] = useState({ status: "", message: "" });
   const [listaObjetos, setListaObjetos] = useState([]);
   const [editar, setEditar] = useState(false);
   const [objeto, setObjeto] = useState({
     codigo: "",
-    numero: "",
+    nome: "",
     descricao: "",
-    capacidade: "",
-    predio: "",
+    sigla: "",
   });
-  const [carregando, setCarregando] = useState(true);
+  const [carregando, setCarrengando] = useState(true);
   const [listaPredios, setListaPredios] = useState([]);
+  const [editarEquipamento, setEditarEquipamento] = useState(false);
+  const [equipamento, setEquipamento] = useState({
+    codigo: "",
+    descricao: "",
+    numero_serie: "",
+    valor: "",
+    sala: "",
+  });
 
-  const recuperaSalas = async () => {
-    setCarregando(true);
-    await fetch(`${process.env.REACT_APP_ENDERECO_API}/salas`)
-      .then((response) => response.json())
-      .then((data) => setListaObjetos(data))
-      .catch((err) => setAlerta({ status: "error", message: err }));
-    setCarregando(false);
+  const [listaEquipamentos, setListaEquipamentos] = useState([]);
+  const [exibirEquipamentos, setExibirEquipamentos] = useState(false);
+
+  const recuperaEquipamentos = async (codigosala) => {
+    setObjeto(await getSalaPorCodigoAPI(codigosala));
+    setListaEquipamentos(await getEquipamentosDaSalaAPI(codigosala));
+    setExibirEquipamentos(true);
   };
 
-  const recuperaPredios = async () => {
-    await fetch(`${process.env.REACT_APP_ENDERECO_API}/predios`)
-      .then((response) => response.json())
-      .then((data) => setListaPredios(data))
-      .catch((err) => console.log("Erro: " + err));
+  const recuperaEquipamento = async (codigo) => {
+    setEquipamento(await getEquipamentoPorCodigoAPI(codigo));
   };
 
-  const remover = async (objeto) => {
-    if (window.confirm("Deseja remover este objeto?")) {
-      try {
-        await fetch(
-          `${process.env.REACT_APP_ENDERECO_API}/salas/${objeto.codigo}`,
-          { method: "DELETE" }
-        )
-          .then((response) => response.json())
-          .then((json) =>
-            setAlerta({ status: json.status, message: json.message })
-          );
-        recuperaSalas();
-      } catch (err) {
-        setAlerta({ status: "error", message: err });
-      }
+  const removerEquipamento = async (equipamento) => {
+    if (window.confirm("Deseja remover este equipamento/")) {
+      let retornoAPI = await deleteEquipamentoPorCodigoAPI(equipamento.codigo);
+      setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+      setListaEquipamentos(await getEquipamentosDaSalaAPI(objeto.codigo));
     }
-    recuperaSalas();
+  };
+
+  const acaoCadastrarEquipamento = async (e) => {
+    e.preventDefault();
+    const metodo = editarEquipamento ? "PUT" : "POST";
+    try {
+      let retornoAPI = await cadastraEquipamentosAPI(objeto, metodo);
+      setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+      setObjeto(retornoAPI.objeto);
+      if (!editarEquipamento) {
+        setEditarEquipamento(true);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    recuperaEquipamentos(objeto.codigo);
+  };
+
+  const handleChangeEquipamento = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    setEquipamento({ ...equipamento, [name]: value });
   };
 
   const recuperar = async (codigo) => {
-    await fetch(`${process.env.REACT_APP_ENDERECO_API}/salas/${codigo}`)
-      .then((response) => response.json())
-      .then((data) => setObjeto(data))
-      .catch((err) => console.log(err));
+    setObjeto(await getSalaPorCodigoAPI(codigo));
   };
 
   const acaoCadastrar = async (e) => {
     e.preventDefault();
     const metodo = editar ? "PUT" : "POST";
     try {
-      await fetch(`${process.env.REACT_APP_ENDERECO_API}/salas`, {
-        method: metodo,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(objeto),
-      })
-        .then((response) => response.json())
-        .then((json) => {
-          setAlerta({ status: json.status, message: json.message });
-          setObjeto(json.objeto);
-          if (!editar) {
-            setEditar(true);
-          }
-        });
+      let retornoAPI = await cadastraSalasAPI(objeto, metodo);
+      setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+      setObjeto(retornoAPI.objeto);
+      if (!editar) {
+        setEditar(true);
+      }
     } catch (err) {
-      console.error(err.message);
+      console.log(err);
     }
     recuperaSalas();
   };
@@ -87,6 +109,24 @@ function Sala() {
     const name = e.target.name;
     const value = e.target.value;
     setObjeto({ ...objeto, [name]: value });
+  };
+
+  const recuperaSalas = async () => {
+    setCarrengando(true);
+    setListaObjetos(await getSalasAPI());
+    setCarrengando(false);
+  };
+
+  const recuperaPredios = async () => {
+    setListaPredios(await getPrediosAPI());
+  };
+
+  const remover = async (objeto) => {
+    if (window.confirm("Deseja remover este objeto?")) {
+      let retornoAPI = await deleteSalaPorCodigoAPI(objeto.codigo);
+      setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
+    }
+    recuperaSalas();
   };
 
   useEffect(() => {
@@ -101,7 +141,7 @@ function Sala() {
         setAlerta,
         listaObjetos,
         setListaObjetos,
-        recuperaSalas,
+        recuperaPredios,
         remover,
         objeto,
         setObjeto,
@@ -111,12 +151,32 @@ function Sala() {
         acaoCadastrar,
         handleChange,
         listaPredios,
+        listaEquipamentos,
+        equipamento,
+        setEquipamento,
+        handleChangeEquipamento,
+        removerEquipamento,
+        recuperaEquipamento,
+        acaoCadastrarEquipamento,
+        setEditarEquipamento,
+        editarEquipamento,
+        recuperaEquipamentos,
+        setExibirEquipamentos,
       }}
     >
-      {!carregando ? <Tabela /> : <Carregando />}
+      {!carregando ? (
+        !exibirEquipamentos ? (
+          <Tabela />
+        ) : (
+          <TabelaEquipamentos />
+        )
+      ) : (
+        <Carregando />
+      )}
       <Form />
+      <FormEquipamento />
     </SalaContext.Provider>
   );
 }
 
-export default Sala;
+export default Predio;
