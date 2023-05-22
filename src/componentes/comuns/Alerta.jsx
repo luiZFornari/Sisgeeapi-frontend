@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 const Alerta = ({ alerta }) => {
 
@@ -6,14 +6,12 @@ const Alerta = ({ alerta }) => {
 
     useEffect(() => {
         setExibir(true);
-
         setTimeout(() => {
             setExibir(false);
         }, 2000);
-        
     }, [alerta]);
 
-    var classe = '';
+    let classe = '';
     if (alerta.status === 'error') {
         classe = 'alert alert-danger'
     } else {
@@ -21,15 +19,14 @@ const Alerta = ({ alerta }) => {
     }
 
     return (
-        <div>
+        <>
             {(alerta.message.length > 0 && exibir) &&
                 <div className={classe} role="alert">
                     {alerta.message}
                 </div>
             }
-        </div>
+        </>
     )
-
 }
 
 export default Alerta;

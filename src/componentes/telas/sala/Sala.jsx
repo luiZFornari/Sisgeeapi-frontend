@@ -3,23 +3,22 @@ import SalaContext from "./SalaContext";
 import Tabela from "./Tabela";
 import Form from "./Form";
 import Carregando from "../../comuns/Carregando";
-import { getPrediosAPI } from "../../serviços/PredioServiço";
+import { getPrediosAPI } from "../../servicos/PredioServico";
 import {
   getSalasAPI,
   getSalaPorCodigoAPI,
   deleteSalaPorCodigoAPI,
   cadastraSalasAPI,
-} from "../../serviços/SalaServiço";
-
+} from "../../servicos/SalaServico";
 import {
-  cadastraEquipamentosAPI,
-  deleteEquipamentoPorCodigoAPI,
-  getEquipamentoPorCodigoAPI,
   getEquipamentosDaSalaAPI,
-} from "../../serviços/EquipamentoServiço";
-
+  getEquipamentoPorCodigoAPI,
+  deleteEquipamentoPorCodigoAPI,
+  cadastraEquipamentosAPI,
+} from "../../servicos/EquipamentoServico";
 import FormEquipamento from "./FormEquipamento";
 import TabelaEquipamentos from "./TabelaEquipamentos";
+import WithAuth from "../../seg/WithAuth";
 
 function Predio() {
   const [alerta, setAlerta] = useState({ status: "", message: "" });
@@ -41,22 +40,21 @@ function Predio() {
     valor: "",
     sala: "",
   });
-
   const [listaEquipamentos, setListaEquipamentos] = useState([]);
   const [exibirEquipamentos, setExibirEquipamentos] = useState(false);
 
-  const recuperaEquipamentos = async (codigosala) => {
+  const recuperarEquipamentos = async (codigosala) => {
     setObjeto(await getSalaPorCodigoAPI(codigosala));
     setListaEquipamentos(await getEquipamentosDaSalaAPI(codigosala));
     setExibirEquipamentos(true);
   };
 
-  const recuperaEquipamento = async (codigo) => {
+  const recuperarEquipamento = async (codigo) => {
     setEquipamento(await getEquipamentoPorCodigoAPI(codigo));
   };
 
   const removerEquipamento = async (equipamento) => {
-    if (window.confirm("Deseja remover este equipamento/")) {
+    if (window.confirm("Deseja remover este equipamento?")) {
       let retornoAPI = await deleteEquipamentoPorCodigoAPI(equipamento.codigo);
       setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
       setListaEquipamentos(await getEquipamentosDaSalaAPI(objeto.codigo));
@@ -67,7 +65,7 @@ function Predio() {
     e.preventDefault();
     const metodo = editarEquipamento ? "PUT" : "POST";
     try {
-      let retornoAPI = await cadastraEquipamentosAPI(objeto, metodo);
+      let retornoAPI = await cadastraEquipamentosAPI(equipamento, metodo);
       setAlerta({ status: retornoAPI.status, message: retornoAPI.message });
       setObjeto(retornoAPI.objeto);
       if (!editarEquipamento) {
@@ -76,7 +74,7 @@ function Predio() {
     } catch (err) {
       console.log(err);
     }
-    recuperaEquipamentos(objeto.codigo);
+    recuperarEquipamentos(objeto.codigo);
   };
 
   const handleChangeEquipamento = (e) => {
@@ -156,11 +154,11 @@ function Predio() {
         setEquipamento,
         handleChangeEquipamento,
         removerEquipamento,
-        recuperaEquipamento,
+        recuperarEquipamento,
         acaoCadastrarEquipamento,
         setEditarEquipamento,
         editarEquipamento,
-        recuperaEquipamentos,
+        recuperarEquipamentos,
         setExibirEquipamentos,
       }}
     >
@@ -179,4 +177,4 @@ function Predio() {
   );
 }
 
-export default Predio;
+export default WithAuth(Predio);

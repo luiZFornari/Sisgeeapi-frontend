@@ -2,21 +2,30 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "@popperjs/core/dist/cjs/popper.js";
 import "bootstrap/dist/js/bootstrap.min.js";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import Menu from "./componentes/Menu";
 import Home from "./componentes/telas/Home";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import React from "react";
 import Predio from "./componentes/telas/predio/Predio";
 import Sala from "./componentes/telas/sala/Sala";
+import Login from "./componentes/telas/login/Login";
+import MenuPublico from "./componentes/MenuPublico";
+import MenuPrivado from "./componentes/MenuPrivado";
+import Menu from "./componentes/Menu";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
     <BrowserRouter>
-      <Menu />
       <Routes>
-        <Route exact path="/" element={<Home />} />
-        <Route exact="true" path="/predios" element={<Predio />} />
-        <Route exact="true" path="/salas" element={<Sala />} />
+        <Route path="/" element={<MenuPublico />}>
+          <Route index element={<Home />} />
+          <Route exact="true" path="/login" element={<Login />} />
+        </Route>
+
+        <Route path="/privado" element={<MenuPrivado />}>
+          <Route index element={<Home />} />
+          <Route exact="true" path="predios" element={<Predio />} />
+          <Route exact="true" path="salas" element={<Sala />} />
+          <Route exact="true" path="login" element={<Login />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

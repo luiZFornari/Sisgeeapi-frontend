@@ -8,7 +8,8 @@ import {
   getPredioPorCodigoAPI,
   deletePredioPorCodigoAPI,
   cadastraPrediosAPI,
-} from "../../serviços/PredioServiço";
+} from "../../servicos/PredioServico";
+import WithAuth from "../../seg/WithAuth";
 
 function Predio() {
   const [alerta, setAlerta] = useState({ status: "", message: "" });
@@ -90,4 +91,4 @@ function Predio() {
   );
 }
 
-export default Predio;
+export default WithAuth(Predio);
